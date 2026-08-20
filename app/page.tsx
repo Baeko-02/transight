@@ -10,6 +10,7 @@ type Validation =
 type Field = { id: string; label: string; placeholder: string; optional?: boolean; tabHint: string; validation: Validation };
 type Clue = { label: string; value: string; href: string; network: string };
 type Mission = { id: number; title: string; difficulty: string; time: string; route: string; objective: string; briefing: string; clues: Clue[]; fields: Field[]; hints: string[] };
+type BasicAddress = { id: number; name: string; description: string; chain: string; chainName: string; address: string; explorer: string; explorerName: string; icon?: string; visual: "coin" | "flag" | "logo" | "warning" | "photo" };
 
 // 강사용 문제 데이터: 문제 추가·수정은 이 배열에서 관리합니다.
 // 문자열 정답은 정규화된 SHA-256 해시만 저장합니다.
@@ -58,6 +59,68 @@ const MISSIONS: Mission[] = [
       "USDT가 나간 것과 동시에 지갑으로 새로 들어온 토큰을 함께 보세요.",
       "To 주소의 프로토콜 라벨과 들어온 토큰의 심볼을 각각 입력하세요.",
     ],
+  },
+];
+
+const BASIC_ADDRESSES: BasicAddress[] = [
+  {
+    id: 1,
+    name: "Lazarus (DPRK)",
+    description: "북한 해킹 조직, 공식 국제적 제재 대상",
+    chain: "ETH",
+    chainName: "Ethereum",
+    address: "0xfa3fcccb897079fd83bfba690e7d47eb402d6c49",
+    explorer: "https://etherscan.io/address/0xfa3fcccb897079fd83bfba690e7d47eb402d6c49",
+    explorerName: "Etherscan",
+    icon: "/basic-assets/north-korea-flag.png",
+    visual: "flag",
+  },
+  {
+    id: 2,
+    name: "업비트 User Address",
+    description: "Huione Pay 자금 전송",
+    chain: "TRX",
+    chainName: "TRON",
+    address: "TDwNN9ui2QaMHpaLzUDLALcac3u3FSfJBN",
+    explorer: "https://tronscan.org/#/address/TDwNN9ui2QaMHpaLzUDLALcac3u3FSfJBN",
+    explorerName: "TRONSCAN",
+    icon: "https://s2.coinmarketcap.com/static/img/coins/64x64/1958.png",
+    visual: "coin",
+  },
+  {
+    id: 3,
+    name: "ZB.com",
+    description: "미신고 가상자산사업자",
+    chain: "BTC",
+    chainName: "Bitcoin",
+    address: "13N2P64GdivkSoCDxo8NvESvb7V4dCdQWK",
+    explorer: "https://mempool.space/address/13N2P64GdivkSoCDxo8NvESvb7V4dCdQWK",
+    explorerName: "mempool.space",
+    icon: "/basic-assets/zb-com-logo.png",
+    visual: "logo",
+  },
+  {
+    id: 4,
+    name: "Korean Illegal Porn Site (놀쟈)",
+    description: "불법 음란물 사이트",
+    chain: "XRP",
+    chainName: "XRP Ledger",
+    address: "rsqCgqtaCTm1qkKtW8ikFUMLwmdqJGGM9q",
+    explorer: "https://xrpscan.com/account/rsqCgqtaCTm1qkKtW8ikFUMLwmdqJGGM9q",
+    explorerName: "XRPScan",
+    visual: "warning",
+  },
+  {
+    id: 5,
+    name: "Lazarus (DPRK)",
+    description: "북한 해킹 조직, 공식 국제적 제재 대상",
+    chain: "BSC",
+    chainName: "BNB Smart Chain",
+    address: "0xe03a1ae400fa54283d5a1c4f8b89d3ca74afbd62",
+    explorer: "https://bscscan.com/address/0xe03a1ae400fa54283d5a1c4f8b89d3ca74afbd62",
+    explorerName: "BscScan",
+    icon: "/basic-assets/lazarus-hacker.png",
+    visual: "photo",
   },
 ];
 
@@ -136,8 +199,11 @@ function CopyButton({ value }: { value: string }) {
   return <button className="copy-button" type="button" onClick={copy} aria-label="값 복사">{copied ? "복사됨" : "복사"}</button>;
 }
 
-function CaseHeader({ active }: { active: number }) {
-  return <div className="case-header"><div className="brand-lockup"><span className="brand-mark">T</span><span><b>TRANSIGHT</b><small>ONCHAIN INVESTIGATION</small></span></div><div className="status-pill"><i />{active === 4 ? "추적 완료" : `단계 ${Math.max(active, 0)}/3`}</div></div>;
+function CaseHeader({ active, section, basicIndex, onBasic, onInvestigation }: { active: number; section: "investigation" | "basic"; basicIndex: number; onBasic: () => void; onInvestigation: () => void }) {
+  return <header className="case-header"><nav className="brand-tabs" aria-label="교육 과정 선택">
+    <button className={`brand-tab ${section === "basic" ? "active" : ""}`} type="button" onClick={onBasic} aria-current={section === "basic" ? "page" : undefined}><span className="brand-lockup"><span className="brand-mark basic-mark">T</span><span><b>TRANSIGHT</b><small>BASIC</small></span></span></button>
+    <button className={`brand-tab ${section === "investigation" ? "active" : ""}`} type="button" onClick={onInvestigation} aria-current={section === "investigation" ? "page" : undefined}><span className="brand-lockup"><span className="brand-mark">T</span><span><b>TRANSIGHT</b><small>ONCHAIN INVESTIGATION</small></span></span></button>
+  </nav><div className="status-pill"><i />{section === "basic" ? `주소 ${basicIndex + 1}/5` : active === 4 ? "추적 완료" : `단계 ${Math.max(active, 0)}/3`}</div></header>;
 }
 
 function RouteRail({ solved, active }: { solved: number[]; active: number }) {
@@ -154,6 +220,8 @@ function Explanation({ mission }: { mission: Mission }) {
 }
 
 export default function Home() {
+  const [section, setSection] = useState<"investigation" | "basic">("investigation");
+  const [basicIndex, setBasicIndex] = useState(0);
   const [view, setView] = useState(0);
   const [solved, setSolved] = useState<number[]>([]);
   const [hints, setHints] = useState<Record<number, number>>({});
@@ -167,6 +235,7 @@ export default function Home() {
   const mission = view >= 1 && view <= 3 ? MISSIONS[view - 1] : null;
   const totalHints = useMemo(() => Object.values(hints).reduce((sum, n) => sum + n, 0), [hints]);
   const percent = Math.round((solved.length / 3) * 100);
+  const basicAddress = BASIC_ADDRESSES[basicIndex];
 
   function start() { setView(solved.length === 3 ? 4 : Math.min(solved.length + 1, 3)); window.scrollTo({ top: 0, behavior: "smooth" }); }
   function openMission(id: number) { if (id <= solved.length + 1) { setView(id); setResults({}); window.scrollTo({ top: 0, behavior: "smooth" }); } }
@@ -181,17 +250,20 @@ export default function Home() {
   }
   function next() { if (!mission) return; setResults({}); setAnswers({}); setView(mission.id === 3 ? 4 : mission.id + 1); window.scrollTo({ top: 0, behavior: "smooth" }); }
   function reset() { localStorage.removeItem(STORAGE_KEY); setSolved([]); setHints({}); setAnswers({}); setResults({}); setView(0); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  function showBasic() { setSection("basic"); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  function showInvestigation() { setSection("investigation"); setView(0); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  function moveBasic(direction: -1 | 1) { setBasicIndex((current) => Math.max(0, Math.min(BASIC_ADDRESSES.length - 1, current + direction))); window.scrollTo({ top: 0, behavior: "smooth" }); }
   if (!hydrated) return <main className="loading-screen"><span>CASE FILE LOADING</span></main>;
 
-  return <main><div className="shell"><CaseHeader active={view} />
-    {view === 0 && <>
+  return <main><div className="shell"><CaseHeader active={view} section={section} basicIndex={basicIndex} onBasic={showBasic} onInvestigation={showInvestigation} />
+    {section === "investigation" && view === 0 && <>
       <section className="hero hero-clean"><div className="hero-copy"><p className="eyebrow"><span>BEGINNER CASE 01</span> · 온체인 추적 입문</p><h1>온체인 추적<br /><em>실습 기초</em></h1><div className="hero-actions"><button className="primary-button" onClick={start}>{solved.length ? "문제 계속 풀기" : "문제 시작"}<span>→</span></button><span className="estimate">예상 소요 10–15분</span></div></div>
       </section>
       <section className="briefing-grid"><div className="briefing-main"><span className="section-number">01</span><div><p className="section-label">MISSION BRIEF</p><h2>실습 목표</h2><p>하나의 주소에서 발생한 세 가지 사건을 추적하며 온체인 추적 실습의 기초를 배웁니다. 각 활동을 CEX, DeFi, Bridge로 구분해 봅니다.</p></div></div><div className="rules"><p className="section-label">풀이 순서</p><ul><li><b>주소 확인</b><span>보낸 주소와 받은 주소의 라벨을 확인합니다.</span></li><li><b>토큰 확인</b><span>어떤 토큰이 나가고 들어왔는지 봅니다.</span></li><li><b>답안 제출</b><span>플랫폼 이름과 트랜잭션 해시를 정확히 입력합니다.</span></li></ul></div></section>
       <section className="progress-card"><div><p className="section-label">CASE PROGRESS</p><h2>{percent}% 조사 완료</h2></div><div className="progress-meter"><span style={{ width: `${percent}%` }} /></div><RouteRail solved={solved} active={0} /><div className="mission-list">{MISSIONS.map((item) => <button key={item.id} onClick={() => openMission(item.id)} disabled={item.id > solved.length + 1}><span>0{item.id}</span><div><b>{item.title}</b><small>{item.route}</small></div><i>{solved.includes(item.id) ? "해결" : item.id <= solved.length + 1 ? "열림" : "잠김"}</i></button>)}</div></section>
     </>}
 
-    {mission && <section className="mission-page"><RouteRail solved={solved} active={mission.id} /><div className="mission-heading"><div><button className="back-button" onClick={() => setView(0)}>← 사건 개요</button><p className="eyebrow">EVIDENCE STEP 0{mission.id} · {mission.route}</p><h1>{mission.title}</h1><p>{mission.objective}</p></div><div className="difficulty"><span>난이도</span><b>{mission.difficulty}</b><small>{mission.time}</small></div></div><div className="date-alert"><b>추적 범위</b><span>모든 문제는 <strong>2026-08-17</strong> 기록을 기준으로 합니다.</span></div>
+    {section === "investigation" && mission && <section className="mission-page"><RouteRail solved={solved} active={mission.id} /><div className="mission-heading"><div><button className="back-button" onClick={() => setView(0)}>← 사건 개요</button><p className="eyebrow">EVIDENCE STEP 0{mission.id} · {mission.route}</p><h1>{mission.title}</h1><p>{mission.objective}</p></div><div className="difficulty"><span>난이도</span><b>{mission.difficulty}</b><small>{mission.time}</small></div></div><div className="date-alert"><b>추적 범위</b><span>모든 문제는 <strong>2026-08-17</strong> 기록을 기준으로 합니다.</span></div>
       <div className="workspace-grid"><div className="work-column">
         <section className="evidence-panel"><div className="panel-kicker"><span>주어진 단서</span><b>E-{mission.id.toString().padStart(3, "0")}</b></div><p>{mission.briefing}</p>{mission.clues.map((clue) => <div className="clue-row" key={clue.value}><div><span>{clue.label}</span><button className="hash-button" title={clue.value} onClick={() => navigator.clipboard.writeText(clue.value)}><code>{clue.value}</code></button></div><div className="clue-actions"><CopyButton value={clue.value} /><a href={clue.href} target="_blank" rel="noreferrer">{clue.network} 열기 ↗</a></div></div>)}</section>
         <form className="answer-sheet" onSubmit={submit}><div className="sheet-heading"><div><p className="section-label">ANSWER SHEET</p><h2>분석 기록</h2></div><span>{mission.fields.filter((f) => !f.optional).length}개 필수 항목</span></div><div className="field-list">{mission.fields.map((field) => { const status = results[field.id]; return <label className={`field ${status === true ? "correct" : status === false ? "wrong" : ""}`} key={field.id}><span className="field-number">{field.id}{field.optional && <small>선택</small>}</span><span className="field-body"><b>{field.label}</b><span className="input-wrap"><input value={answers[field.id] || ""} onChange={(e) => setAnswers((prev) => ({ ...prev, [field.id]: e.target.value }))} placeholder={field.placeholder} autoComplete="off" spellCheck={false} /><i>{status === true ? "✓" : status === false ? "×" : ""}</i></span>{status === false && <small className="feedback">다시 확인해 보세요. {field.tabHint}</small>}{status === true && <small className="feedback ok">근거가 확인되었습니다.</small>}</span></label>; })}</div><button className="submit-button" type="submit" disabled={checking}>{checking ? "기록 대조 중…" : "답안 확인"}<span>SHA-256 검증</span></button></form>
@@ -199,9 +271,19 @@ export default function Home() {
       </div><aside className="hint-panel"><div className="hint-head"><div><p className="section-label">FIELD NOTES</p><h3>단계별 힌트</h3></div><span>{hints[mission.id] || 0}/3 사용</span></div><p>막히면 한 단계씩 열어 보세요. 정답 자체보다 어느 화면을 봐야 하는지 알려줍니다.</p><div className="hint-stack">{mission.hints.map((hint, index) => <div className={`hint-card ${index < (hints[mission.id] || 0) ? "revealed" : ""}`} key={hint}><span>HINT 0{index + 1}</span>{index < (hints[mission.id] || 0) ? <p>{hint}</p> : <div className="redacted"><i /><i /><i /></div>}</div>)}</div><button onClick={revealHint} disabled={(hints[mission.id] || 0) >= 3}>{(hints[mission.id] || 0) >= 3 ? "모든 힌트 사용" : "다음 힌트 개봉"}</button></aside></div>
     </section>}
 
-    {view === 4 && <section className="completion"><div className="complete-hero"><p className="eyebrow">BEGINNER CASE · COMPLETE</p><h1>온체인 추적의<br /><em>첫 단계를 완료했습니다.</em></h1><p>하나의 주소에서 거래소 출금, 브릿지, DeFi 예치를 구분했습니다.</p><div className="score-row"><div><b>3/3</b><span>문제 해결</span></div><div><b>{totalHints}</b><span>힌트 사용</span></div><div><b>3건</b><span>트랜잭션 확인</span></div></div></div>
+    {section === "investigation" && view === 4 && <section className="completion"><div className="complete-hero"><p className="eyebrow">BEGINNER CASE · COMPLETE</p><h1>온체인 추적의<br /><em>첫 단계를 완료했습니다.</em></h1><p>하나의 주소에서 거래소 출금, 브릿지, DeFi 예치를 구분했습니다.</p><div className="score-row"><div><b>3/3</b><span>문제 해결</span></div><div><b>{totalHints}</b><span>힌트 사용</span></div><div><b>3건</b><span>트랜잭션 확인</span></div></div></div>
       <section className="flow-board"><div className="board-heading"><p className="section-label">BEGINNER TRACE SUMMARY</p><h2>확인한 온체인 활동</h2></div><div className="simple-flow"><div className="flow-node source"><span>STEP 01</span><b>{decode("QnliaXQ=")}</b><small>10 USDT 출금</small></div><div className="flow-arrow"><span>Ethereum</span></div><div className="flow-fork"><div className="fork-hub"><b>추적 주소</b><code>0x7f4980…43dAf42</code></div><div className="branch top"><span>STEP 02</span><b>{decode("QWNyb3Nz")}</b><small>USDC 브릿지</small></div><div className="branch bottom"><span>STEP 03</span><b>{decode("Rmx1aWQ=")}</b><small>USDT 예치 → {decode("ZlVTRFQ=")}</small></div></div></div><p className="residual-note">초급 과정의 핵심은 라벨, To/From 주소, Tokens Transferred를 정확히 읽는 것입니다.</p></section>
       <section className="lessons"><div><span>01</span><h3>엔티티 라벨</h3><p>From 주소의 라벨을 확인하면 거래소 출금 여부를 빠르게 알 수 있습니다.</p></div><div><span>02</span><h3>컨트랙트 라벨</h3><p>To 주소와 이벤트 이름을 보면 브릿지 플랫폼을 식별할 수 있습니다.</p></div><div><span>03</span><h3>토큰 이동</h3><p>나간 토큰과 들어온 토큰을 함께 보면 DeFi 예치 구조가 보입니다.</p></div></section><div className="complete-actions"><button className="primary-button" onClick={() => setView(1)}>문제 다시 보기</button><button className="text-button" onClick={reset}>진행 기록 초기화</button></div>
+    </section>}
+
+    {section === "basic" && <section className="basic-page">
+      <div className="basic-hero"><div><p className="eyebrow"><span>TRANSIGHT BASIC</span> · 트랜잭션 맵 실습</p><h1><small>[실습 1]</small> 트랜잭션 맵<br /><em>기초 사용법</em></h1><p>대표적인 온체인 주소를 순서대로 확인합니다. 주소를 복사해 트랜잭션 맵에 입력하거나, 각 체인의 블록 탐색기에서 직접 살펴보세요.</p></div><div className="basic-count"><b>{String(basicIndex + 1).padStart(2, "0")}</b><span>/ {String(BASIC_ADDRESSES.length).padStart(2, "0")}</span></div></div>
+      <nav className="basic-steps" aria-label="주소 실습 순서">{BASIC_ADDRESSES.map((item, index) => <button key={item.id} type="button" className={index === basicIndex ? "active" : ""} onClick={() => setBasicIndex(index)} aria-label={`${index + 1}번 주소, ${item.name}`} aria-current={index === basicIndex ? "step" : undefined}><span>{String(index + 1).padStart(2, "0")}</span><b>{item.chain}</b></button>)}</nav>
+      <article className="basic-card" aria-live="polite">
+        <div className="basic-card-visual"><span className="address-index">ADDRESS {String(basicAddress.id).padStart(2, "0")}</span><div className={`chain-logo visual-${basicAddress.visual}`}>{basicAddress.visual === "warning" ? <span className="adult-warning" aria-label="성인 불법 사이트 경고"><b>19</b><i>×</i></span> : <img src={basicAddress.icon} alt={basicAddress.visual === "flag" ? "북한 인공기" : basicAddress.visual === "logo" ? "ZB.com 로고" : basicAddress.visual === "photo" ? "라자루스 해커를 표현한 교육용 이미지" : `${basicAddress.chainName} 로고`} width="160" height="160" />}</div><span className="chain-name">{basicAddress.chainName}</span><b>{basicAddress.chain}</b></div>
+        <div className="basic-card-content"><div className="basic-card-heading"><div><p className="section-label">ONCHAIN ADDRESS</p><h2>{basicAddress.name}</h2></div><span className="chain-chip">{basicAddress.chain}</span></div><p className="basic-description">{basicAddress.description}</p><div className="basic-address"><span>전체 주소</span><code>{basicAddress.address}</code></div><div className="basic-card-actions"><CopyButton value={basicAddress.address} /><a href={basicAddress.explorer} target="_blank" rel="noreferrer">{basicAddress.explorerName}에서 확인 <span>↗</span></a></div></div>
+      </article>
+      <div className="basic-carousel-nav"><button type="button" onClick={() => moveBasic(-1)} disabled={basicIndex === 0}><span>←</span> 이전 주소 확인하기</button><div className="basic-dots" aria-hidden="true">{BASIC_ADDRESSES.map((item, index) => <i key={item.id} className={index === basicIndex ? "active" : ""} />)}</div><button type="button" onClick={() => moveBasic(1)} disabled={basicIndex === BASIC_ADDRESSES.length - 1}>다음 주소 확인하기 <span>→</span></button></div>
     </section>}
   </div><footer><span>TRANSIGHT · ONCHAIN FOUNDATIONS</span><span>교육용 시뮬레이션 · BEGINNER COURSE</span></footer></main>;
 }
