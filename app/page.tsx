@@ -10,7 +10,7 @@ type Validation =
 type Field = { id: string; label: string; placeholder: string; optional?: boolean; tabHint: string; validation: Validation };
 type Clue = { label: string; value: string; href: string; network: string };
 type Mission = { id: number; title: string; difficulty: string; time: string; route: string; objective: string; briefing: string; clues: Clue[]; fields: Field[]; hints: string[] };
-type BasicAddress = { id: number; name: string; description: string; chain: string; chainName: string; address: string; explorer: string; explorerName: string; icon?: string; visual: "coin" | "flag" | "logo" | "warning" | "photo" };
+type BasicAddress = { id: number; name: string; description: string; chain: string; chainName: string; address: string; explorer: string; explorerName: string; icon: string; visual: "coin" | "flag" | "logo" | "badge" | "photo" };
 
 // 강사용 문제 데이터: 문제 추가·수정은 이 배열에서 관리합니다.
 // 문자열 정답은 정규화된 SHA-256 해시만 저장합니다.
@@ -65,27 +65,27 @@ const MISSIONS: Mission[] = [
 const BASIC_ADDRESSES: BasicAddress[] = [
   {
     id: 1,
-    name: "Lazarus (DPRK)",
+    name: "Lazarus",
     description: "북한 해킹 조직, 공식 국제적 제재 대상",
     chain: "ETH",
     chainName: "Ethereum",
     address: "0xfa3fcccb897079fd83bfba690e7d47eb402d6c49",
     explorer: "https://etherscan.io/address/0xfa3fcccb897079fd83bfba690e7d47eb402d6c49",
     explorerName: "Etherscan",
-    icon: "/basic-assets/north-korea-flag.png",
-    visual: "flag",
+    icon: "/basic-assets/lazarus-dprk-hacker.png",
+    visual: "photo",
   },
   {
     id: 2,
-    name: "업비트 User Address",
+    name: "UPBIT User Address",
     description: "Huione Pay 자금 전송",
     chain: "TRX",
     chainName: "TRON",
     address: "TDwNN9ui2QaMHpaLzUDLALcac3u3FSfJBN",
     explorer: "https://tronscan.org/#/address/TDwNN9ui2QaMHpaLzUDLALcac3u3FSfJBN",
     explorerName: "TRONSCAN",
-    icon: "https://s2.coinmarketcap.com/static/img/coins/64x64/1958.png",
-    visual: "coin",
+    icon: "/basic-assets/huione-pay-logo.png",
+    visual: "badge",
   },
   {
     id: 3,
@@ -101,25 +101,26 @@ const BASIC_ADDRESSES: BasicAddress[] = [
   },
   {
     id: 4,
-    name: "Korean Illegal Porn Site (놀쟈)",
+    name: "Korean Illegal Porn Site",
     description: "불법 음란물 사이트",
     chain: "XRP",
     chainName: "XRP Ledger",
     address: "rsqCgqtaCTm1qkKtW8ikFUMLwmdqJGGM9q",
     explorer: "https://xrpscan.com/account/rsqCgqtaCTm1qkKtW8ikFUMLwmdqJGGM9q",
     explorerName: "XRPScan",
-    visual: "warning",
+    icon: "/basic-assets/adult-19.png",
+    visual: "badge",
   },
   {
     id: 5,
-    name: "Lazarus (DPRK)",
+    name: "Lazarus",
     description: "북한 해킹 조직, 공식 국제적 제재 대상",
     chain: "BSC",
     chainName: "BNB Smart Chain",
     address: "0xe03a1ae400fa54283d5a1c4f8b89d3ca74afbd62",
     explorer: "https://bscscan.com/address/0xe03a1ae400fa54283d5a1c4f8b89d3ca74afbd62",
     explorerName: "BscScan",
-    icon: "/basic-assets/lazarus-hacker.png",
+    icon: "/basic-assets/lazarus-dprk-hacker.png",
     visual: "photo",
   },
 ];
@@ -252,7 +253,7 @@ export default function Home() {
   function reset() { localStorage.removeItem(STORAGE_KEY); setSolved([]); setHints({}); setAnswers({}); setResults({}); setView(0); window.scrollTo({ top: 0, behavior: "smooth" }); }
   function showBasic() { setSection("basic"); window.scrollTo({ top: 0, behavior: "smooth" }); }
   function showInvestigation() { setSection("investigation"); setView(0); window.scrollTo({ top: 0, behavior: "smooth" }); }
-  function moveBasic(direction: -1 | 1) { setBasicIndex((current) => Math.max(0, Math.min(BASIC_ADDRESSES.length - 1, current + direction))); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  function moveBasic(direction: -1 | 1) { setBasicIndex((current) => Math.max(0, Math.min(BASIC_ADDRESSES.length - 1, current + direction))); }
   if (!hydrated) return <main className="loading-screen"><span>CASE FILE LOADING</span></main>;
 
   return <main><div className="shell"><CaseHeader active={view} section={section} basicIndex={basicIndex} onBasic={showBasic} onInvestigation={showInvestigation} />
@@ -280,7 +281,7 @@ export default function Home() {
       <div className="basic-hero"><div><p className="eyebrow"><span>TRANSIGHT BASIC</span> · 트랜잭션 맵 실습</p><h1><small>[실습 1]</small> 트랜잭션 맵<br /><em>기초 사용법</em></h1><p>대표적인 온체인 주소를 순서대로 확인합니다. 주소를 복사해 트랜잭션 맵에 입력하거나, 각 체인의 블록 탐색기에서 직접 살펴보세요.</p></div><div className="basic-count"><b>{String(basicIndex + 1).padStart(2, "0")}</b><span>/ {String(BASIC_ADDRESSES.length).padStart(2, "0")}</span></div></div>
       <nav className="basic-steps" aria-label="주소 실습 순서">{BASIC_ADDRESSES.map((item, index) => <button key={item.id} type="button" className={index === basicIndex ? "active" : ""} onClick={() => setBasicIndex(index)} aria-label={`${index + 1}번 주소, ${item.name}`} aria-current={index === basicIndex ? "step" : undefined}><span>{String(index + 1).padStart(2, "0")}</span><b>{item.chain}</b></button>)}</nav>
       <article className="basic-card" aria-live="polite">
-        <div className="basic-card-visual"><span className="address-index">ADDRESS {String(basicAddress.id).padStart(2, "0")}</span><div className={`chain-logo visual-${basicAddress.visual}`}>{basicAddress.visual === "warning" ? <span className="adult-warning" aria-label="성인 불법 사이트 경고"><b>19</b><i>×</i></span> : <img src={basicAddress.icon} alt={basicAddress.visual === "flag" ? "북한 인공기" : basicAddress.visual === "logo" ? "ZB.com 로고" : basicAddress.visual === "photo" ? "라자루스 해커를 표현한 교육용 이미지" : `${basicAddress.chainName} 로고`} width="160" height="160" />}</div><span className="chain-name">{basicAddress.chainName}</span><b>{basicAddress.chain}</b></div>
+        <div className="basic-card-visual"><span className="address-index">ADDRESS {String(basicAddress.id).padStart(2, "0")}</span><div className={`chain-logo visual-${basicAddress.visual}`}><img src={basicAddress.icon} alt={basicAddress.visual === "flag" ? "북한 인공기" : basicAddress.visual === "logo" ? "ZB.com 로고" : basicAddress.visual === "badge" && basicAddress.id === 2 ? "Huione Pay 로고" : basicAddress.visual === "badge" ? "19세 이상 이용 표시" : basicAddress.visual === "photo" ? "북한 국기와 익명 해커 이미지" : `${basicAddress.chainName} 로고`} width="160" height="160" /></div><span className="chain-name">{basicAddress.chainName}</span><b>{basicAddress.chain}</b></div>
         <div className="basic-card-content"><div className="basic-card-heading"><div><p className="section-label">ONCHAIN ADDRESS</p><h2>{basicAddress.name}</h2></div><span className="chain-chip">{basicAddress.chain}</span></div><p className="basic-description">{basicAddress.description}</p><div className="basic-address"><span>전체 주소</span><code>{basicAddress.address}</code></div><div className="basic-card-actions"><CopyButton value={basicAddress.address} /><a href={basicAddress.explorer} target="_blank" rel="noreferrer">{basicAddress.explorerName}에서 확인 <span>↗</span></a></div></div>
       </article>
       <div className="basic-carousel-nav"><button type="button" onClick={() => moveBasic(-1)} disabled={basicIndex === 0}><span>←</span> 이전 주소 확인하기</button><div className="basic-dots" aria-hidden="true">{BASIC_ADDRESSES.map((item, index) => <i key={item.id} className={index === basicIndex ? "active" : ""} />)}</div><button type="button" onClick={() => moveBasic(1)} disabled={basicIndex === BASIC_ADDRESSES.length - 1}>다음 주소 확인하기 <span>→</span></button></div>
