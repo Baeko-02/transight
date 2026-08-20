@@ -200,11 +200,11 @@ function CopyButton({ value }: { value: string }) {
   return <button className="copy-button" type="button" onClick={copy} aria-label="값 복사">{copied ? "복사됨" : "복사"}</button>;
 }
 
-function CaseHeader({ active, section, basicIndex, onBasic, onInvestigation }: { active: number; section: "investigation" | "basic"; basicIndex: number; onBasic: () => void; onInvestigation: () => void }) {
-  return <header className="case-header"><nav className="brand-tabs" aria-label="교육 과정 선택">
-    <button className={`brand-tab ${section === "basic" ? "active" : ""}`} type="button" onClick={onBasic} aria-current={section === "basic" ? "page" : undefined}><span className="brand-lockup"><span className="brand-mark basic-mark">T</span><span><b>TRANSIGHT</b><small>BASIC</small></span></span></button>
-    <button className={`brand-tab ${section === "investigation" ? "active" : ""}`} type="button" onClick={onInvestigation} aria-current={section === "investigation" ? "page" : undefined}><span className="brand-lockup"><span className="brand-mark">T</span><span><b>TRANSIGHT</b><small>ONCHAIN INVESTIGATION</small></span></span></button>
-  </nav><div className="status-pill"><i />{section === "basic" ? `주소 ${basicIndex + 1}/5` : active === 4 ? "추적 완료" : `단계 ${Math.max(active, 0)}/3`}</div></header>;
+function CaseHeader({ section, onBasic, onInvestigation }: { section: "investigation" | "basic"; onBasic: () => void; onInvestigation: () => void }) {
+  return <header className="case-header"><nav className="course-tabs" aria-label="교육 과정 선택">
+    <button className={`course-tab ${section === "basic" ? "active" : ""}`} type="button" onClick={onBasic} aria-current={section === "basic" ? "page" : undefined}>Basic</button>
+    <button className={`course-tab ${section === "investigation" ? "active" : ""}`} type="button" onClick={onInvestigation} aria-current={section === "investigation" ? "page" : undefined}>Onchain Investigation</button>
+  </nav></header>;
 }
 
 function RouteRail({ solved, active }: { solved: number[]; active: number }) {
@@ -256,7 +256,7 @@ export default function Home() {
   function moveBasic(direction: -1 | 1) { setBasicIndex((current) => Math.max(0, Math.min(BASIC_ADDRESSES.length - 1, current + direction))); }
   if (!hydrated) return <main className="loading-screen"><span>CASE FILE LOADING</span></main>;
 
-  return <main><div className="shell"><CaseHeader active={view} section={section} basicIndex={basicIndex} onBasic={showBasic} onInvestigation={showInvestigation} />
+  return <main><div className="shell"><CaseHeader section={section} onBasic={showBasic} onInvestigation={showInvestigation} />
     {section === "investigation" && view === 0 && <>
       <section className="hero hero-clean"><div className="hero-copy"><p className="eyebrow"><span>BEGINNER CASE 01</span> · 온체인 추적 입문</p><h1>온체인 추적<br /><em>실습 기초</em></h1><div className="hero-actions"><button className="primary-button" onClick={start}>{solved.length ? "문제 계속 풀기" : "문제 시작"}<span>→</span></button><span className="estimate">예상 소요 10–15분</span></div></div>
       </section>
